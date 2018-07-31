@@ -3,53 +3,44 @@
  *
  */
 
-
 // Dependencies
 var http = require('http');
 var https = require('https');
 var url = require('url');
 var StringDecoder = require('string_decoder').StringDecoder;
-var config = require('./config');
+var config = require('./lib/config');
 var fs = require('fs');
-var _data = require('./lib/data');
+var handlers = require('./lib/handlers');
+var helpers = require('./lib/helpers');
 
-
-//TESTING 
-// @TODO  delete this
-_data.delete('test','newFile',function(err) {
-  console.log(`this was the ${err} error`);
-});
-
- // instantiate the httpserver
+ // Instantiate the HTTP server
 var httpServer = http.createServer(function(req,res){
-    combinedServer(req,res);
+  unifiedServer(req,res);
 });
 
-// Start the server
+// Start the HTTP server
 httpServer.listen(config.httpPort,function(){
-  console.log(`The server is up and running now on port ${config.httpPort} in ${config.envName} environment`);
+  console.log('The HTTP server is running on port '+config.httpPort);
 });
 
-// https options
+// Instantiate the HTTPS server
 var httpsServerOptions = {
-    'key': fs.readFileSync('./https/key.pem'),
-    'cert':  fs.readFileSync('./https/cert.pem')
-}
-
- // instantiate the httpsServer
- var httpsServer = https.createServer(httpsServerOptions,function(req,res){
-    combinedServer(req,res);
+  'key': fs.readFileSync('./https/key.pem'),
+  'cert': fs.readFileSync('./https/cert.pem')
+};
+var httpsServer = https.createServer(httpsServerOptions,function(req,res){
+  unifiedServer(req,res);
 });
 
-// Start the server
+// Start the HTTPS server
 httpsServer.listen(config.httpsPort,function(){
-  console.log(`The server is up and running now on port ${config.httpsPort} in ${config.envName} environment`);
+ console.log('The HTTPS server is running on port '+config.httpsPort);
 });
 
+// All the server logic for both the http and https server
+var unifiedServer = function(req,res){
 
-// server logic for both http and htttps
-var combinedServer = function(req,res) {
-      // Parse the url
+  // Parse the url
   var parsedUrl = url.parse(req.url, true);
 
   // Get the path
@@ -83,7 +74,7 @@ var combinedServer = function(req,res) {
         'queryStringObject' : queryStringObject,
         'method' : method,
         'headers' : headers,
-        'payload' : buffer
+        'payload' : helpers.parseJsonToObject(buffer)
       };
 
       // Route the request to the handler specified in the router
@@ -99,29 +90,17 @@ var combinedServer = function(req,res) {
         var payloadString = JSON.stringify(payload);
 
         // Return the response
-        res.setHeader('Content-Type','application/json');
+        res.setHeader('Content-Type', 'application/json');
         res.writeHead(statusCode);
         res.end(payloadString);
-        console.log("Returning this response: ",statusCode,payloadString);
+        console.log(trimmedPath,statusCode);
       });
+
   });
-}
-
-// Define all the handlers
-var handlers = {};
-
-// ping handler
-handlers.ping = function(data,callback){
-    callback(200,{'name':'ping handler'});
-};
-
-// Not found handler
-handlers.notFound = function(data,callback){
-  callback(404);
 };
 
 // Define the request router
 var router = {
-  'ping' : handlers.ping
+  'ping' : handlers.ping,
+  'users' : handlers.users
 };
-
