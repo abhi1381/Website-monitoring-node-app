@@ -3,5 +3,6 @@
     "lastName": "tiwari",
     "phone": "1234567890",
     "hashedPassword": "301b555227a29a630a4ed872777b467961dab6b2d6bea0e977c6a00a82afcccd",
-    "tosAgreement": true
+    "tosAgreement": true,
+    "checks": ["g6a8c0zmy0rflutwulml", "l80pd287yz1cikjxibgp", "qa7hbzb9ras70t82epv2", "o1fgao40cj7f0uh02qbn"]
 }
